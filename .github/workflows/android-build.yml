@@ -15,19 +15,27 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           
-      - name: Setup Gradle 8.5
-        uses: gradle/actions/setup-gradle@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          gradle-version: 8.5
+          node-version: '20'
+          
+      - name: Install dependencies
+        run: npm install
+        
+      - name: Create Bundle
+        run: |
+          mkdir -p android/app/src/main/assets
+          npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res
 
-      - name: Build with Gradle
-        run: gradle build --no-daemon
-
-      - name: Build Debug APK
-        run: gradle assembleDebug --no-daemon
-
-      - name: Upload Debug APK
+      - name: Build APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+          
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
